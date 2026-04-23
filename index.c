@@ -139,6 +139,19 @@ int index_load(Index *index) {
     // (See Lab Appendix for logical steps)
     (void)index;
     return -1;
+}int index_load(Index *index) {
+    index->count = 0;
+
+    FILE *f = fopen(INDEX_FILE, "r");
+    if (!f) return 0; // empty index
+
+    
+        }
+        index->count++;
+    }
+
+    fclose(f);
+    return 0;
 }
 
 // Save the index to .pes/index atomically.
