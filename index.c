@@ -179,10 +179,38 @@ int index_load(Index *index) {
 //
 // Returns 0 on success, -1 on error.
 int index_save(const Index *index) {
-    // TODO: Implement atomic index saving
-    // (See Lab Appendix for logical steps)
-    (void)index;
-    return -1;
+    if (!index) return -1;
+
+    // Create array of pointers instead of copying full struct
+    IndexEntry *entries[MAX_INDEX_ENTRIES];
+
+    for (int i = 0; i < index->count; i++) {
+        entries[i] = (IndexEntry *)&index->entries[i];
+    }
+
+    // Sort pointers instead of struct copy
+    qsort(entries, index->count, sizeof(IndexEntry*), cmp_ptrs);
+
+    FILE *f = fopen(".pes/index.tmp", "w");
+    if (!f) return -1;
+
+    for (int i = 0; i < index->count; i++) {
+        char hex[HASH_HEX_SIZE + 1];
+        hash_to_hex(&entries[i]->hash, hex);
+
+        fprintf(f, "%o %s %lu %u %s\n",
+                entries[i]->mode,
+                hex,
+                entries[i]->mtime_sec,
+                entries[i]->size,
+                entries[i]->path);
+    }
+
+    fflush(f);
+    fsync(fileno(f));
+    fclose(f);
+
+    return rename(".pes/index.tmp", INDEX_FILE);
 }
 
 // Stage a file for the next commit.
